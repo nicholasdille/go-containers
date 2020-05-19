@@ -2,15 +2,29 @@ package main
 
 import (
 	"fmt"
-	"os"
-	registry "github.com/nicholasdille/registry/registry"
+	"log"
+	"flag"
+	registry "github.com/nicholasdille/go-containers/registry"
 )
 
+var hostname string
+var port int
+var insecure bool
+var username string
+var password string
+
 func main() {
-	fmt.Fprintln(os.Stdout, "Start")
+	flag.StringVar(&hostname, "hostname", "localhost", "Hostname of the registry")
+	flag.IntVar(   &port,     "port",     443,         "Port of the registry")
+	flag.BoolVar(  &insecure, "insecure", false,       "Connection scheme")
+	flag.StringVar(&username, "username", "",          "Username for registry")
+	flag.StringVar(&password, "password", "",          "Password for registry")
+	flag.Parse()
 
-	registry := registry.NewRegistry()
-	registry.Connect()
-
-	fmt.Fprintln(os.Stdout, "End")
+	registry := registry.NewRegistry(hostname, port, insecure, username, password)
+	err := registry.Check()
+	fmt.Println(registry.String())
+	if err != nil {
+		log.Fatal(err)
+	}
 }
