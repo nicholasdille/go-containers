@@ -23,8 +23,8 @@ func main() {
 
 	registry := registry.NewRegistry(hostname, port, insecure, username, password)
 	err := registry.Check()
-	fmt.Println(registry.String())
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(registry.String())
 }
