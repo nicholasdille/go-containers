@@ -22,7 +22,7 @@ func main() {
 	flag.Parse()
 
 	registry := registry.NewRegistry(hostname, port, insecure, username, password)
-	err := registry.Check()
+	_, err := registry.Check()
 	if err != nil {
 		log.Fatal(err)
 	}
