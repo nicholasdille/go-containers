@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
-	"net/http"
 	"net/url"
 )
 
