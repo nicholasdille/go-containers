@@ -1,0 +1,23 @@
+FROM golang:1.14-alpine AS builder
+ARG GO_PACKAGE
+ARG GO_OUTPUT
+RUN test -n ${GO_PACKAGE} && test -n ${GO_OUTPUT}
+RUN apk add --update-cache --no-cache \
+        make \
+        git
+ENV GO111MODULE=on
+RUN mkdir -p /go/src/${GO_PACKAGE}
+WORKDIR /go/src/${GO_PACKAGE}
+RUN pwd
+COPY go.mod .
+RUN go mod download
+COPY . .
+RUN make
+
+FROM alpine AS final
+ARG GO_PACKAGE
+ARG GO_OUTPUT
+ENV BINARY=${GO_OUTPUT}
+COPY --from=builder /go/src/${GO_PACKAGE}/bin/${GO_OUTPUT} /
+USER nobody
+ENTRYPOINT /${BINARY}
