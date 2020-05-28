@@ -18,6 +18,12 @@ func (a NullAuthenticator) AddAuthentication(request *http.Request) error {
 	return nil
 }
 
+// NewNullAuthenticator creates a new NullAuthenticator
+func NewNullAuthenticator() (a NullAuthenticator, err error) {
+	a = NullAuthenticator{}
+	return
+}
+
 // BasicAuthenticator implements basic authentication
 type BasicAuthenticator struct {
 	username string
@@ -26,6 +32,7 @@ type BasicAuthenticator struct {
 
 // AddAuthentication implements basic authentication
 func (a BasicAuthenticator) AddAuthentication(request *http.Request) error {
+	request.SetBasicAuth(a.username, a.password)
 	return nil
 }
 
