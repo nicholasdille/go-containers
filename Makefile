@@ -19,7 +19,7 @@ M = $(shell printf "\033[34;1m▶\033[0m")
 
 .DEFAULT_GOAL := $(BIN_DIR)/$(GO_OUTPUT)
 
-.PHONY: all clean
+.PHONY: all clean format lint check deps test
 
 all: $(BIN_DIR)/$(GO_OUTPUT)
 
@@ -43,6 +43,9 @@ deps: ; $(info $(M) Generating dependency tree...)
 	fi
 	@depth .
 
+test: ; $(info $(M) Running tests...)
+	@CGO_ENABLED=0 go test ./...
+
 go.mod: $(SOURCE) ; $(info $(M) Updating modules...)
 	@if test -f "$@"; then \
 	    go mod tidy; \
@@ -53,7 +56,7 @@ go.mod: $(SOURCE) ; $(info $(M) Updating modules...)
 $(BIN_DIR):
 	@mkdir --parents $(BIN_DIR)
 
-$(BIN_DIR)/$(GO_OUTPUT): go.mod $(BIN_DIR) $(SOURCE) ; $(info $(M) Building...)
+$(BIN_DIR)/$(GO_OUTPUT): go.mod $(BIN_DIR) $(SOURCE) test ; $(info $(M) Building...)
 	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo -ldflags "-s -w -X main.GitCommit=$(GIT_COMMIT) -X main.BuildTime=$(BUILD_TIME) -X main.Version=$(GIT_TAG)" -o $@ $(ROOT_DIR)
 
 %.sha256: % ; $(info $(M) Creating SHA256 for $*...)
