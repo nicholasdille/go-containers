@@ -1,13 +1,14 @@
 package registry
 
 import (
+	"errors"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"errors"
 )
 
+// Requester represents an HTTP(S) endpoint
 type Requester struct {
 	hostname      string
 	port          int
@@ -20,6 +21,7 @@ type Requester struct {
 	authenticator Authenticator
 }
 
+// NewRequester creates a new Requester
 func NewRequester(hostname string, port int, insecure bool, username string, password string) (r *Requester, err error) {
 	err = nil
 
@@ -39,10 +41,10 @@ func NewRequester(hostname string, port int, insecure bool, username string, pas
 		authenticator: &NullAuthenticator{},
 	}
 
-	request, err := http.NewRequest("GET", r.url + "/v2/", strings.NewReader(""))
+	request, err := http.NewRequest("GET", r.url+"/v2/", strings.NewReader(""))
 	if err != nil {
 		err = errors.New("Failed to create request")
-		return 
+		return
 	}
 
 	response, err := r.httpClient.Do(request)
@@ -90,5 +92,5 @@ func NewRequester(hostname string, port int, insecure bool, username string, pas
 		}
 	}
 
-	return 
+	return
 }
