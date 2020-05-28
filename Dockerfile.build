@@ -5,7 +5,6 @@ RUN test -n ${GO_PACKAGE} && test -n ${GO_OUTPUT}
 RUN apk add --update-cache --no-cache \
         make \
         git
-ENV GO111MODULE=on
 RUN mkdir -p /go/src/${GO_PACKAGE}
 WORKDIR /go/src/${GO_PACKAGE}
 RUN pwd
