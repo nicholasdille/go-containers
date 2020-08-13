@@ -1,4 +1,4 @@
-FROM golang:1.14-alpine AS builder
+FROM golang:1.15-alpine AS builder
 ARG GO_PACKAGE
 ARG GO_OUTPUT
 RUN test -n ${GO_PACKAGE} && test -n ${GO_OUTPUT}
