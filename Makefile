@@ -3,48 +3,31 @@
 #GO_OUTPUT  := my_binary_name
 
 ### PREDEFINED VARIABLES ###
-ROOT_DIR   := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 BIN_DIR    := bin
 REPO       := $(shell git config --get remote.origin.url)
 GO_PACKAGE ?= $(REPO:https://%.git=%)
 GO_OUTPUT  ?= $(shell basename $(GO_PACKAGE))
-
 SOURCE     := $(shell find . -type f -name \*.go)
+PLATFORM   ?= local
+M          := $(shell printf "\033[34;1m▶\033[0m")
 
-GIT_COMMIT := $(shell git rev-list -1 HEAD)
-BUILD_TIME := $(shell date +%Y%m%d-%H%M%S)
-GIT_TAG    := $(shell git describe --tags 2>/dev/null)
-
-M = $(shell printf "\033[34;1m▶\033[0m")
-
-.DEFAULT_GOAL := $(BIN_DIR)/$(GO_OUTPUT)
-
-.PHONY: all clean format lint check deps test
-
+.PHONY: all
 all: $(BIN_DIR)/$(GO_OUTPUT)
 
+.PHONY: check
+check: lint test
+
+.PHONY: clean
 clean: ; $(info $(M) Cleaning...)
 	@rm -rf $(BIN_DIR)
 
-format: ; $(info $(M) Formatting...)
-	@gofmt -l -w $(SOURCE)
-
-lint: ; $(info $(M) Checking style...)
-	@if ! type golint >/dev/null 2>&1; then \
-	    echo Please install golint: go get -u golang.org/x/lint/golint; \
-	fi
-	@golint ./...
-
-check: format lint
-
-deps: ; $(info $(M) Generating dependency tree...)
-	@if ! type depth >/dev/null 2>&1; then \
-	    echo Please install golint: go get github.com/KyleBanks/depth/cmd/depth; \
-	fi
-	@depth .
-
+.PHONY: test
 test: ; $(info $(M) Running tests...)
-	@CGO_ENABLED=0 go test ./...
+	@DOCKER_BUILDKIT=1 docker build . --target unit-test
+
+.PHONY: lint
+lint: ; $(info $(M) Checking style...)
+	@DOCKER_BUILDKIT=1 docker build . --target lint
 
 go.mod: $(SOURCE) ; $(info $(M) Updating modules...)
 	@if test -f "$@"; then \
@@ -56,8 +39,13 @@ go.mod: $(SOURCE) ; $(info $(M) Updating modules...)
 $(BIN_DIR):
 	@mkdir --parents $(BIN_DIR)
 
+.PHONY: $(BIN_DIR)/$(GO_OUTPUT)
 $(BIN_DIR)/$(GO_OUTPUT): go.mod $(BIN_DIR) $(SOURCE) test ; $(info $(M) Building...)
-	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -tags netgo -ldflags "-s -w -X main.GitCommit=$(GIT_COMMIT) -X main.BuildTime=$(BUILD_TIME) -X main.Version=$(GIT_TAG)" -o $@ $(ROOT_DIR)
+	@DOCKER_BUILDKIT=1 docker build . \
+	--target bin \
+	--output bin/ \
+	--build-arg OUTPUT=$(GO_OUTPUT) \
+	--platform ${PLATFORM}
 
 %.sha256: % ; $(info $(M) Creating SHA256 for $*...)
 	@echo sha256sum $* > $@
